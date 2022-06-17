@@ -103,6 +103,7 @@ git send-email --dump-aliases
     --quiet                        * Output one line of info per email.
     --dry-run                      * Don't actually send the emails.
     --[no-]validate                * Perform patch sanity checks. Default on.
+    --[no-]validate-email          * Perform email address sanity checks. Default on.
     --[no-]format-patch            * understand any non optional arguments as
                                      `git format-patch` ones.
     --force                        * Send even if safety checks would prevent it.
@@ -281,6 +282,7 @@ my $thread = 1;
 my $chain_reply_to = 0;
 my $use_xmailer = 1;
 my $validate = 1;
+my $validate_email = 1;
 my $target_xfer_encoding = 'auto';
 my $forbid_sendmail_variables = 1;
 
@@ -293,6 +295,7 @@ my %config_bool_settings = (
     "tocover" => \$cover_to,
     "signedoffcc" => \$signed_off_by_cc,
     "validate" => \$validate,
+    "validateemail" => \$validate_email,
     "multiedit" => \$multiedit,
     "annotate" => \$annotate,
     "xmailer" => \$use_xmailer,
@@ -531,6 +534,8 @@ my %options = (
 		    "no-thread" => sub {$thread = 0},
 		    "validate!" => \$validate,
 		    "no-validate" => sub {$validate = 0},
+		    "validate-email!" => \$validate_email,
+		    "no-validate-email" => sub {$validate_email = 0},
 		    "transfer-encoding=s" => \$target_xfer_encoding,
 		    "format-patch!" => \$format_patch,
 		    "no-format-patch" => sub {$format_patch = 0},
@@ -1131,6 +1136,10 @@ sub extract_valid_address {
 
 	# check for a local address:
 	return $address if ($address =~ /^($local_part_regexp)$/);
+
+	# Email::Valid isn't always correct, so support a way to bypass
+	# See https://bugzilla.redhat.com/show_bug.cgi?id=2046203
+	return 1 if not $validate_email;
 
 	$address =~ s/^\s*<(.*)>\s*$/$1/;
 	my $have_email_valid = eval { require Email::Valid; 1 };

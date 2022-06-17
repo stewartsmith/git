@@ -2302,6 +2302,7 @@ test_expect_success PERL 'send-email' '
 	EOF
 	test_completion "git send-email --val" <<-\EOF &&
 	--validate Z
+	--validate-email Z
 	EOF
 	test_completion "git send-email ma" "main "
 '
